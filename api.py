@@ -35,19 +35,22 @@ class TimeSeriesApi:
     def histogram(self, col_names: list[str], **kwargs):
         self.df[col_names].plot.hist(**kwargs)
 
-    def simple_moving_average(self, col_names: list[str], window: int):
+    def simple_moving_average(self, col_names: list[str], windows: list[int]):
         "given a list of columns and a window size, compute the simple moving average and add it to the DataFrame."
-        for col_name in col_names:
-            self.df[f"{col_name}_sma_{window}"] = self.df[col_name].rolling(
-                window=window
-            ).mean()
 
-    def exponential_moving_average(self, col_names: list[str], window: int):
+        for window in windows:
+            for col_name in col_names:
+                self.df[f"{col_name}_sma_{window}"] = self.df[col_name].rolling(
+                    window=window
+                ).mean()
+
+    def exponential_moving_average(self, col_names: list[str], windows: list[int]):
         "given a list of columns and a window size, compute the exponential moving average and add it to the DataFrame."
-        for col_name in col_names:
-            self.df[f"{col_name}_ema_{window}"] = self.df[col_name].ewm(
-                span=window, adjust=False
-            ).mean()
+        for window in windows:
+            for col_name in col_names:
+                self.df[f"{col_name}_ema_{window}"] = self.df[col_name].ewm(
+                    span=window, adjust=False
+                ).mean()
 
     def __call__(self):
         return self.df

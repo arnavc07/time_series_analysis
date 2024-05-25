@@ -19,3 +19,6 @@ class TimeSeriesApi:
             self.df[f"{col_name}_log_return"] = np.log(
                 self.df[col_name] / self.df[col_name].shift(1)
             )
+
+    def __call__(self):
+        return self.df

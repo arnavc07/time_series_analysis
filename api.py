@@ -24,7 +24,10 @@ class TimeSeriesApi:
         self.df[col_names].plot(**kwargs)
 
     def line_plot(self, col_names: list[str], **kwargs):
-        self.df[col_names].plot.line(kind="line", **kwargs)
+        self.df[col_names].plot.line(**kwargs)
+
+    def histogram(self, col_names: list[str], **kwargs):
+        self.df[col_names].plot.hist(**kwargs)
 
     def __call__(self):
         return self.df

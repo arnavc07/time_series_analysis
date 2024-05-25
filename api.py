@@ -20,5 +20,11 @@ class TimeSeriesApi:
                 self.df[col_name] / self.df[col_name].shift(1)
             )
 
+    def plot(self, col_names: list[str], **kwargs):
+        self.df[col_names].plot(**kwargs)
+
+    def line_plot(self, col_names: list[str], **kwargs):
+        self.df[col_names].plot.line(kind="line", **kwargs)
+
     def __call__(self):
         return self.df

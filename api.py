@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 class TimeSeriesApi:
@@ -77,6 +79,14 @@ class TimeSeriesApi:
             if "log_return" in col and "cumulative" not in col
         ]
         return self.df[cols].corr()
+
+    def plot_return_correlation_matrix(self):
+        "plot the correlation matrix of the log returns."
+        corr_df = self.returns_correlation_matrix()
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(corr_df, annot=True, cmap="coolwarm", vmin=0.0, vmax=1, center=0.5)
+        plt.title("Return Correlation Matrix")
+        plt.show()
 
     def __call__(self):
         return self.df

@@ -32,6 +32,10 @@ class TimeSeriesApi:
         log_return_cols = [
             col_name for col_name in self.df.columns if "log_return" in col_name
         ]
+
+        if col_names is not None:
+            log_return_cols = col_names
+            
         assert (
             len(log_return_cols) > 0
         ), "No log return columns found in the DataFrame, add log returns first"

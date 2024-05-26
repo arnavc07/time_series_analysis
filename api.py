@@ -35,7 +35,7 @@ class TimeSeriesApi:
 
         if col_names is not None:
             log_return_cols = col_names
-            
+
         assert (
             len(log_return_cols) > 0
         ), "No log return columns found in the DataFrame, add log returns first"
@@ -68,6 +68,15 @@ class TimeSeriesApi:
                 self.df[f"{col_name}_ema_{window}"] = (
                     self.df[col_name].ewm(span=window, adjust=False).mean()
                 )
+
+    def returns_correlation_matrix(self) -> pd.DataFrame:
+        "compute the correlation matrix of the log returns and return it as a DataFrame"
+        cols = [
+            col
+            for col in self.df.columns
+            if "log_return" in col and "cumulative" not in col
+        ]
+        return self.df[cols].corr()
 
     def __call__(self):
         return self.df

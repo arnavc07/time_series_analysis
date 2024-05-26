@@ -83,10 +83,13 @@ class TimeSeriesApi:
     def plot_return_correlation_matrix(self):
         "plot the correlation matrix of the log returns."
         corr_df = self.returns_correlation_matrix()
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(12, 8))
         sns.heatmap(corr_df, annot=True, cmap="coolwarm", vmin=0.0, vmax=1, center=0.5)
         plt.title("Return Correlation Matrix")
         plt.show()
+
+    def pairs_scatter_plot(self, x_col: str, y_col: str, **kwargs):
+        self.df.plot.scatter(x=x_col, y=y_col, **kwargs)
 
     def __call__(self):
         return self.df

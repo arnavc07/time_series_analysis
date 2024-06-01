@@ -27,15 +27,21 @@ class TimeSeriesApi:
             self.df[f"{col_name}_log_return"] = np.log(
                 self.df[col_name] / self.df[col_name].shift(1)
             )
-    
+
     def grouped_log_returns(self, col_names: list[str], groupby_cols: list[str]):
         "given a list of columns and a column to group by, compute the log returns and add them to the DataFrame."
 
         def _column_log_returns(df):
             df = df.set_index("Date")
-            return np.log(df/df.shift(1)).dropna()
-        
-        return self.df.groupby(groupby_cols)[col_names].apply(_column_log_returns).rename(columns={col_name: f"{col_name}_log_return" for col_name in col_names})
+            return np.log(df / df.shift(1)).dropna()
+
+        return (
+            self.df.groupby(groupby_cols)[col_names]
+            .apply(_column_log_returns)
+            .rename(
+                columns={col_name: f"{col_name}_log_return" for col_name in col_names}
+            )
+        )
 
     def cumulative_log_returns(self, col_names: list[str] = None):
         "given a list of columns, compute the cumulative log returns and add them to the DataFrame. If col_names is none, computes cumulative returns for all log return columns"

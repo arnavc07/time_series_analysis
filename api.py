@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 class TimeSeriesApi:
     """
     A utility class for time series data manipulation, visualization and analysis.
@@ -32,18 +31,17 @@ class TimeSeriesApi:
         "given a list of columns and a column to group by, compute the log returns and add them to the DataFrame."
 
         def _column_log_returns(df):
-            df = df.set_index("Date")
-            return np.log(df / df.shift(1)).dropna()
+            df = df.set_index("Date").sort_index()
+            for col_name in col_names:
+                df[f"{col_name}_log_return"] = np.log(df[col_name] / df[col_name].shift(1)).dropna()
 
-        return (
-            self.df.groupby(groupby_cols)[col_names]
+        self.df = (
+            self.df.groupby(groupby_cols)[col_names + ["Date"]]
             .apply(_column_log_returns)
-            .rename(
-                columns={col_name: f"{col_name}_log_return" for col_name in col_names}
-            )
+            .reset_index()
         )
 
-    def cumulative_log_returns(self, col_names: list[str] = None):
+    def cumulative_log_returns(self, col_names: list[str] = None, groupers: list[str] = None):
         "given a list of columns, compute the cumulative log returns and add them to the DataFrame. If col_names is none, computes cumulative returns for all log return columns"
 
         log_return_cols = [
@@ -57,8 +55,14 @@ class TimeSeriesApi:
             len(log_return_cols) > 0
         ), "No log return columns found in the DataFrame, add log returns first"
 
-        for col_name in log_return_cols:
-            self.df[f"{col_name}_cumulative"] = self.df[col_name].cumsum()
+        def _cumulative_returns(df):
+            df = df.set_index("Date").sort_index()
+            for col_name in log_return_cols:
+                df[f"{col_name}_cumulative"] = df[col_name].cumsum()
+            
+            return df
+
+        self.df = self.df.groupby(groupers)[col_names + ["Date"]].apply(_cumulative_returns)
 
     def plot(self, col_names: list[str], **kwargs):
         self.df[col_names].plot(**kwargs)

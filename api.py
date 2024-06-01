@@ -118,7 +118,7 @@ class TimeSeriesApi:
 
         return annualized_volatility
 
-    def rolling_realized_value_calculator(
+    def rolling_realized_volatility_calculator(
         self, returns_col_name: str, window: int, groupers: list[str] = None
     ) -> pd.DataFrame:
         "function to calculate the rolling realized close-close volatility of a given dataframe of log returns, optionally grouped by a list of tickers"
@@ -132,9 +132,7 @@ class TimeSeriesApi:
 
         return (
             rolling_window.apply(
-                lambda x: self.realized_close_close_volatility_calculator(
-                    x, returns_col_name=returns_col_name
-                ),
+                lambda x: self.realized_close_close_volatility_calculator(x),
                 raw=True,
             )
             .dropna()

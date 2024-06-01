@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 class TimeSeriesApi:
     """
     A utility class for time series data manipulation, visualization and analysis.
@@ -33,7 +34,9 @@ class TimeSeriesApi:
         def _column_log_returns(df):
             df = df.set_index("Date").sort_index()
             for col_name in col_names:
-                df[f"{col_name}_log_return"] = np.log(df[col_name] / df[col_name].shift(1)).dropna()
+                df[f"{col_name}_log_return"] = np.log(
+                    df[col_name] / df[col_name].shift(1)
+                ).dropna()
 
         self.df = (
             self.df.groupby(groupby_cols)[col_names + ["Date"]]
@@ -41,7 +44,9 @@ class TimeSeriesApi:
             .reset_index()
         )
 
-    def cumulative_log_returns(self, col_names: list[str] = None, groupers: list[str] = None):
+    def cumulative_log_returns(
+        self, col_names: list[str] = None, groupers: list[str] = None
+    ):
         "given a list of columns, compute the cumulative log returns and add them to the DataFrame. If col_names is none, computes cumulative returns for all log return columns"
 
         log_return_cols = [
@@ -59,10 +64,12 @@ class TimeSeriesApi:
             df = df.set_index("Date").sort_index()
             for col_name in log_return_cols:
                 df[f"{col_name}_cumulative"] = df[col_name].cumsum()
-            
+
             return df
 
-        self.df = self.df.groupby(groupers)[col_names + ["Date"]].apply(_cumulative_returns)
+        self.df = self.df.groupby(groupers)[col_names + ["Date"]].apply(
+            _cumulative_returns
+        )
 
     def plot(self, col_names: list[str], **kwargs):
         self.df[col_names].plot(**kwargs)

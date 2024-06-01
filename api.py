@@ -28,7 +28,7 @@ class TimeSeriesApi:
                 self.df[col_name] / self.df[col_name].shift(1)
             )
 
-    def grouped_log_returns(self, col_names: list[str], groupby_cols: list[str]):
+    def grouped_log_returns(self, col_names: list[str], groupers: list[str]):
         "given a list of columns and a column to group by, compute the log returns and add them to the DataFrame."
 
         def _column_log_returns(df):
@@ -37,11 +37,13 @@ class TimeSeriesApi:
                 df[f"{col_name}_log_return"] = np.log(
                     df[col_name] / df[col_name].shift(1)
                 ).dropna()
+            return df
 
         self.df = (
-            self.df.groupby(groupby_cols)[col_names + ["Date"]]
+            self.df.groupby(groupers)[list(set(col_names + ["Date"]))]
             .apply(_column_log_returns)
             .reset_index()
+            .dropna()
         )
 
     def cumulative_log_returns(
@@ -67,8 +69,17 @@ class TimeSeriesApi:
 
             return df
 
-        self.df = self.df.groupby(groupers)[col_names + ["Date"]].apply(
+        self.df = (self.df.groupby(groupers)[list(set(col_names + ["Date"]))].apply(
             _cumulative_returns
+        ).reset_index().dropna())
+
+    def plot_cumulative_returns(self):
+        "utility function to plot cumulative returns in the DataFrame for all tickers represented in the dataframe."
+        
+        (
+            self.df
+            .pivot(index=["Date"], columns=["Ticker"], values=[col_name for col_name in self.df.columns if "log_return_cumulative" in col_name])
+            .plot.line(y=[col_name for col_name in self.df.columns if "log_return_cumulative" in col_name], figsize=(12, 6), grid=True)
         )
 
     def plot(self, col_names: list[str], **kwargs):
@@ -153,6 +164,17 @@ class TimeSeriesApi:
                 }
             )
         )
+    
+    def pairwise_betas(self, x_col: str, y_col: str, groupers: list[str] = None) -> pd.DataFrame:
+        "function to calculate the pairwise betas of a given dataframe of log returns"
+        if groupers is not None:
+            betas = self.df.groupby(groupers).apply(
+                lambda x: x[x_col].cov(x[y_col]) / x[x_col].var()
+            )
+        else:
+            betas = self.df[x_col].cov(self.df[y_col]) / self.df[x_col].var()
+
+        return betas
 
     def __call__(self):
         return self.df

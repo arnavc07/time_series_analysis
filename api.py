@@ -106,5 +106,44 @@ class TimeSeriesApi:
     def pairs_scatter_plot(self, x_col: str, y_col: str, **kwargs):
         self.df.plot.scatter(x=x_col, y=y_col, **kwargs)
 
+    def realized_close_close_volatility_calculator(self) -> pd.DataFrame:
+        "function to calculate the realized close-close volatility of a given dataframe of log returns"
+        mean_log_return = self.df.mean()
+        n_samples = self.df.shape[0]
+        variance_of_log_returns = ((self.df - mean_log_return) ** 2).sum() / (
+            n_samples - 1
+        )
+        annualized_variance = variance_of_log_returns * 252
+        annualized_volatility = np.sqrt(annualized_variance)
+
+        return annualized_volatility
+
+    def rolling_realized_value_calculator(
+        self, returns_col_name: str, window: int, groupers: list[str] = None
+    ) -> pd.DataFrame:
+        "function to calculate the rolling realized close-close volatility of a given dataframe of log returns, optionally grouped by a list of tickers"
+
+        if groupers is not None:
+            rolling_window = self.df.groupby(groupers)[[returns_col_name]].rolling(
+                window=window
+            )
+        else:
+            rolling_window = self.df[[returns_col_name]].rolling(window=window)
+
+        return (
+            rolling_window.apply(
+                lambda x: self.realized_close_close_volatility_calculator(
+                    x, returns_col_name=returns_col_name
+                ),
+                raw=True,
+            )
+            .dropna()
+            .rename(
+                columns={
+                    returns_col_name: f"{returns_col_name}_realized_volatility_{window}"
+                }
+            )
+        )
+
     def __call__(self):
         return self.df

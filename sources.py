@@ -1,5 +1,7 @@
+import csv
 import pandas as pd
 import yfinance as yf
+import requests
 
 
 def get_single_ticker_price_history(
@@ -67,3 +69,32 @@ def get_price_history(
         .pivot(index=["Date", "Ticker"], columns="Price", values="value")
         .reset_index()
     )
+
+
+class AlphaVantageApi:
+    def __init__(self, api_key: str = "UB63UD2IVOL1A8G1"):
+        self.api_key = api_key
+
+    def get_active_tickers(self) -> pd.DataFrame:
+        """
+        fetches the active tickers from the Alpha Vantage API
+        """
+        url = f"https://www.alphavantage.co/query?function=LISTING_STATUS&state=active&apikey={self.api_key}"
+
+        with requests.Session() as s:
+            download = s.get(url)
+            decoded_content = download.content.decode("utf-8")
+            cr = csv.reader(decoded_content.splitlines(), delimiter=",")
+            my_list = list(cr)
+
+            col_names = my_list[0]
+
+            return pd.DataFrame.from_records(my_list[1:], columns=col_names)
+
+    def get_most_actively_traded_tickers(self) -> pd.DataFrame:
+        """
+        fetches the most actively traded tickers from the Alpha Vantage API
+        """
+        url = f"https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&state=active&apikey={self.api_key}"
+        r = requests.get(url)
+        return r.json()

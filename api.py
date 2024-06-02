@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 class TimeSeriesApi:
     """
     A utility class for time series data manipulation, visualization and analysis.
@@ -182,18 +181,45 @@ class TimeSeriesApi:
             )
         )
 
-    def pairwise_betas(
-        self, x_col: str, y_col: str, groupers: list[str] = None
+    def rolling_returns_operations(
+        self, returns_col_name: str, window: int, function: callable
     ) -> pd.DataFrame:
-        "function to calculate the pairwise betas of a given dataframe of log returns"
-        if groupers is not None:
-            betas = self.df.groupby(groupers).apply(
-                lambda x: x[x_col].cov(x[y_col]) / x[x_col].var()
-            )
-        else:
-            betas = self.df[x_col].cov(self.df[y_col]) / self.df[x_col].var()
+        "function to calculate the rolling returns operations for a given dataframe of log returns, optionally grouped by a list of tickers"
 
-        return betas
+        return (
+            self.df.pivot(index="Date", columns="Ticker", values=returns_col_name)
+            .rolling(window=window)
+            .apply(function)
+            .dropna()
+        )
+
+    def rolling_covariances_of_returns(
+        self, returns_col_name: str, window: int
+    ) -> pd.DataFrame:
+        "function to calculate the rolling covariances of returns for a given dataframe of log returns, optionally grouped by a list of tickers"
+
+        return self.rolling_returns_operations(
+            returns_col_name, window, lambda x: x.cov()
+        )
+
+    def rolling_variance_of_returns(
+        self, returns_col_name: str, window: int
+    ) -> pd.DataFrame:
+        "function to calculate the rolling variance of returns for a given dataframe of log returns, optionally grouped by a list of tickers"
+
+        return self.rolling_returns_operations(
+            returns_col_name, window, lambda x: x.var()
+        )
+
+    def rolling_beta(self, returns_col_name: str, window: int) -> pd.DataFrame:
+        "function to calculate the rolling beta of returns for a given dataframe of log returns, optionally grouped by a list of tickers"
+
+        rolling_covariances = self.rolling_covariances_of_returns(
+            returns_col_name, window
+        )
+        rolling_variance = self.rolling_variance_of_returns(returns_col_name, window)
+
+        return rolling_covariances.div(rolling_variance, axis=0)
 
     def __call__(self):
         return self.df

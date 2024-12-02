@@ -15,22 +15,22 @@ logging.basicConfig(
 )
 
 
-def update_summary_data(update_prod=False):
+def update_equities_summary_data(update_prod=False):
     "simple function to write down updated summary data for US stocks daily"
 
-    todays_date = pd.Timestamp.today()
-    end_date = todays_date + pd.DateOffset(days=1)
+    start_date = pd.Timestamp.today() - pd.Timedelta(days=1)
+    end_date = start_date + pd.DateOffset(days=1)
 
     fname = "/Users/arnav/personal_code/data/us_stocks_daily_summary.parquet"
 
     existing_data = pd.read_parquet(fname)
 
     volume_params = {
-        "start_date": todays_date.strftime("%Y-%m-%d"),
+        "start_date": start_date.strftime("%Y-%m-%d"),
         "end_date": end_date.strftime("%Y-%m-%d"),
     }
 
-    logging.info(f"Updating equities summary data for {todays_date} from Polygon.io")
+    logging.info(f"Updating equities summary data for {start_date} from Polygon.io")
 
     poly = PolygonIo()
 
@@ -44,13 +44,20 @@ def update_summary_data(update_prod=False):
 
         if update_prod:
             all_data.to_parquet(fname)
+            logging.info(f"Updated equities summary data for {start_date}")
+        else:
+            logging.info(f"Dry run succeeded for {start_date}")
+
     except Exception as e:
-        print(e)
+        logging.info("Unable to run the update")
+        logging.debug(f"Error: {e}")
         return
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Options for updating equities summary data")
+    parser = argparse.ArgumentParser(
+        description="Options for updating equities summary data"
+    )
     parser.add_argument(
         "--update_prod",
         action="store_true",
@@ -58,4 +65,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    update_summary_data(update_rpod=args.update_prod)
+    update_equities_summary_data(update_prod=args.update_prod)

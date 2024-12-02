@@ -2,6 +2,7 @@ import csv
 import pandas as pd
 import yfinance as yf
 import requests
+import time
 
 
 def get_single_ticker_price_history(
@@ -63,12 +64,15 @@ def get_price_history(
     price_tickers = yf.Tickers(tickers_str)
     price_history = price_tickers.history(start=start_timestamp, end=end_timestamp)
 
-    return (
-        price_history.reset_index()
-        .melt(id_vars="Date")
-        .pivot(index=["Date", "Ticker"], columns="Price", values="value")
+    df = (
+        price_history.melt(ignore_index=False)
+        .reset_index()
+        .pivot(index=["Ticker", "Date"], columns="Price")
         .reset_index()
     )
+
+    df.columns = [col[1] if col[1] != "" else col[0] for col in df.columns]
+    return df
 
 
 class AlphaVantageApi:
@@ -98,3 +102,104 @@ class AlphaVantageApi:
         url = f"https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&state=active&apikey={self.api_key}"
         r = requests.get(url)
         return r.json()
+
+
+class PolygonIo:
+    BASE_URL = "https://api.polygon.io/v2"
+    STOCKS_AGG_DATA_URL = "aggs/grouped/locale/us/market/stocks"
+
+    def __init__(self, api_key: str = "XkidfP9emVjqagKXvkWPUt_mJae6qvn9"):
+        self._api_key = api_key
+
+    @property
+    def api_key(self):
+        return self._api_key
+
+    def create_grouped_bars_url(self, date: str, adjusted: bool = True) -> str:
+        """
+        Creates a URL for fetching grouped bars data from the Polygon API.
+
+        Parameters:
+        - date (str): The date for which the data is to be fetched.
+        - adjusted (bool): Whether the data should be adjusted for splits (default: True).
+
+        Returns:
+        - str: The URL for fetching the grouped bars data.
+        """
+        adjusted_str = "true" if adjusted else "false"
+        formatted_date = date.strftime("%Y-%m-%d")
+        return f"{self.BASE_URL}/{self.STOCKS_AGG_DATA_URL}/{formatted_date}?adjusted={adjusted_str}&apiKey={self.api_key}"
+
+    def get_end_of_day_stock_summary(
+        self, start_date, end_date, adjust_for_splits=True, return_raw_response=False
+    ):
+        """
+        Fetches the volume for all tickers in the stock market for a given date range.
+
+        Parameters:
+        - start_date (str): The start date of the date range in the format 'YYYY-MM-DD'.
+        - end_date (str): The end date of the date range in the format 'YYYY-MM-DD'.
+
+        Returns:
+        - pandas.DataFrame: A DataFrame containing the volume data for all tickers.
+
+        Note:
+        - This method makes synchronous API calls to fetch the volume data for each date in the given range.
+        - If an API call fails for a specific date, it will be skipped and the process will continue.
+        """
+        date_range = pd.date_range(start=start_date, end=end_date, freq="B")
+        volume_data = []
+
+        counter = 0
+        # TODO: make this call asynchronous
+        for date in date_range:
+            print(f"processing {date}")
+            formatted_date = date.strftime("%Y-%m-%d")
+            url = self.create_grouped_bars_url(date, adjust_for_splits)
+            response = requests.get(url)
+            if return_raw_response:
+                return response
+
+            if response.status_code == 200:
+                data = response.json()
+                if "results" in data:
+                    for results in data["results"]:
+                        data = {
+                            "Date": formatted_date,
+                            "Ticker": results["T"],
+                            "Volume": results["v"],
+                            "Open": results["o"],
+                            "Close": results["c"],
+                            "High": results["h"],
+                            "Low": results["l"],
+                            "Timestamp": results["t"],
+                            "Timestamp_cst": pd.Timestamp(results["t"] * 1000000)
+                            .tz_localize("UTC")
+                            .tz_convert("US/Central"),  # convert millis to nanos
+                            "VWAP": 0.0,  # default, updated later if the field exists
+                            "Num_Trades": 0.0,  # default, updated later if the field exists
+                        }
+
+                        # these fields can be excluded if traded volume in the stock is 0 for the day
+                        if "vw" in results:
+                            data.update({"VWAP": results["vw"]})
+                        if "n" in results:
+                            data.update({"Num_Trades": results["n"]})
+                        volume_data.append(data)
+
+            else:
+                print(
+                    f"Failed to fetch data for {formatted_date}. Status Code: {response.status_code}"
+                )
+                continue
+
+            counter += 1
+            if counter % 5 == 0:
+                print("throttling API requests for 60 seconds")
+                time.sleep(70)
+                print("resuming API requests")
+
+        df = pd.DataFrame(volume_data)
+        df.columns = [col_name.upper() for col_name in df.columns]
+
+        return df

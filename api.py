@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 class TimeSeriesApi:
     """
     A utility class for time series data manipulation, visualization and analysis.

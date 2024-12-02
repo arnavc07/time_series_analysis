@@ -6,6 +6,7 @@ sys.path.append("/Users/arnav/personal_code/time_series_analysis/")
 from sources import PolygonIo
 
 import logging
+import argparse
 
 logging.basicConfig(
     filename="equities_summary_data.log",
@@ -14,9 +15,7 @@ logging.basicConfig(
 )
 
 
-
-
-def update_summary_data():
+def update_summary_data(update_prod=False):
     "simple function to write down updated summary data for US stocks daily"
 
     todays_date = pd.Timestamp.today()
@@ -42,11 +41,21 @@ def update_summary_data():
         all_data = pd.concat(
             [existing_data, updated_data], axis="rows", ignore_index=True
         )
-        all_data.to_parquet(fname)
+
+        if update_prod:
+            all_data.to_parquet(fname)
     except Exception as e:
         print(e)
         return
 
 
 if __name__ == "__main__":
-    update_summary_data()
+    parser = argparse.ArgumentParser(description="Options for updating equities summary data")
+    parser.add_argument(
+        "--update_prod",
+        action="store_true",
+        help="Update the production data with the new data",
+    )
+
+    args = parser.parse_args()
+    update_summary_data(update_rpod=args.update_prod)

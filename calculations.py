@@ -4,7 +4,7 @@ from polars import Expr as F
 
 class Metrics:
     @staticmethod
-    def log_returns(df: pl.DataFrame, partition_col: str = "Ticker") -> pl.DataFrame:
+    def log_returns(df: pl.DataFrame, partition_col: str = "TICKER", close_col: str = "CLOSE") -> pl.DataFrame:
         """
         Calculate the logarithmic returns for a given DataFrame.
 
@@ -17,8 +17,8 @@ class Metrics:
 
         """
         return df.with_columns(
-            prev_close=pl.col("Close").shift(1).over(partition_col)
-        ).with_columns(log_return=F.log(pl.col("Close") / pl.col("prev_close")))
+            PREV_CLOSE=pl.col(close_col).shift(1).over(partition_col)
+        ).with_columns(log_return=F.log(pl.col(close_col) / pl.col("PREV_CLOSE")))
 
     @staticmethod
     def abs_log_returns(

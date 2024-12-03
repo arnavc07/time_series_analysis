@@ -4,7 +4,9 @@ from polars import Expr as F
 
 class Metrics:
     @staticmethod
-    def log_returns(df: pl.DataFrame, partition_col: str = "TICKER", close_col: str = "CLOSE") -> pl.DataFrame:
+    def log_returns(
+        df: pl.DataFrame, partition_col: str = "TICKER", close_col: str = "CLOSE"
+    ) -> pl.DataFrame:
         """
         Calculate the logarithmic returns for a given DataFrame.
 
@@ -18,7 +20,7 @@ class Metrics:
         """
         return df.with_columns(
             PREV_CLOSE=pl.col(close_col).shift(1).over(partition_col)
-        ).with_columns(log_return=F.log(pl.col(close_col) / pl.col("PREV_CLOSE")))
+        ).with_columns(LOG_RETURN=F.log(pl.col(close_col) / pl.col("PREV_CLOSE")))
 
     @staticmethod
     def abs_log_returns(
@@ -66,7 +68,7 @@ class Metrics:
         )
 
     @staticmethod
-    def mean_returns(df: pl.DataFrame, partition_col: str = "Ticker") -> pl.DataFrame:
+    def mean_returns(df: pl.DataFrame, partition_col: str = "TICKER", log_return_col: str = "LOG_RETURN") -> pl.DataFrame:
         """
         Calculate the mean returns of a DataFrame.
 
@@ -79,7 +81,23 @@ class Metrics:
 
         """
         return df.with_columns(
-            mean_return=pl.col("log_return").mean().over(partition_col)
+            MEAN_RETURN=pl.col(log_return_col).mean().over(partition_col)
+        )
+
+    @staticmethod
+    def std_dev_returns(df: pl.DataFrame, partition_col: str = "TICKER", log_return_col: str = "LOG_RETURN") -> pl.DataFrame:
+        """
+        Calculate the standard deviation of the returns for each partition in the DataFrame.
+
+        Args:
+            df (pl.DataFrame): The input DataFrame containing the data.
+            partition_col (str, optional): The column used for partitioning the data. Defaults to "Ticker".
+
+        Returns:
+            pl.DataFrame: The DataFrame with an additional column "std_dev_return" containing the standard deviation of the returns.
+        """
+        return df.with_columns(
+            STD_DEV_RETURN=pl.col(log_return_col).std().over(partition_col)
         )
 
     @staticmethod

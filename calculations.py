@@ -51,7 +51,7 @@ class Metrics:
 
     @staticmethod
     def cumulative_returns(
-        df: pl.DataFrame, partition_col: str = "Ticker"
+        df: pl.DataFrame, partition_col: str = "Ticker", return_col: str ="LOG_RETURN"
     ) -> pl.DataFrame:
         """
         Calculates the cumulative returns for each partition in the DataFrame.
@@ -64,11 +64,15 @@ class Metrics:
             pl.DataFrame: The DataFrame with an additional column "cumulative_return" containing the cumulative returns.
         """
         return df.with_columns(
-            cumulative_return=pl.col("log_return").cum_sum().over(partition_col)
+            CUMULATIVE_RETURN=pl.col(return_col).cum_sum().over(partition_col)
         )
 
     @staticmethod
-    def mean_returns(df: pl.DataFrame, partition_col: str = "TICKER", log_return_col: str = "LOG_RETURN") -> pl.DataFrame:
+    def mean_returns(
+        df: pl.DataFrame,
+        partition_col: str = "TICKER",
+        log_return_col: str = "LOG_RETURN",
+    ) -> pl.DataFrame:
         """
         Calculate the mean returns of a DataFrame.
 
@@ -85,7 +89,11 @@ class Metrics:
         )
 
     @staticmethod
-    def std_dev_returns(df: pl.DataFrame, partition_col: str = "TICKER", log_return_col: str = "LOG_RETURN") -> pl.DataFrame:
+    def std_dev_returns(
+        df: pl.DataFrame,
+        partition_col: str = "TICKER",
+        log_return_col: str = "LOG_RETURN",
+    ) -> pl.DataFrame:
         """
         Calculate the standard deviation of the returns for each partition in the DataFrame.
 

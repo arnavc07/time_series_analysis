@@ -51,7 +51,7 @@ class Metrics:
 
     @staticmethod
     def cumulative_returns(
-        df: pl.DataFrame, partition_col: str = "Ticker", return_col: str ="LOG_RETURN"
+        df: pl.DataFrame, partition_col: str = "Ticker", return_col: str = "LOG_RETURN"
     ) -> pl.DataFrame:
         """
         Calculates the cumulative returns for each partition in the DataFrame.

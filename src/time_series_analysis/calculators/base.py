@@ -10,12 +10,10 @@ class CalculatorBase(ABC):
         self.config = config
 
     @abstractmethod
-    def output_schema(self) -> dict[str, pl.DataType]:
-        ...
+    def output_schema(self) -> dict[str, pl.DataType]: ...
 
     @abstractmethod
-    def calculate(self) -> pl.DataFrame:
-        ...
+    def calculate(self) -> pl.DataFrame: ...
 
     def execute(self) -> pl.DataFrame:
         df = self.calculate()

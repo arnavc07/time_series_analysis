@@ -12,6 +12,8 @@ dependencies:
   - seaborn
   - requests
   - pydantic
+  - ruff
+  - pre-commit
   - pip
   - pip:
       - yfinance

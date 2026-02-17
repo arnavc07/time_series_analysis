@@ -16,5 +16,6 @@ dependencies:
   - ruff
   - pre-commit
   - pip
+  - pytest
   - pip:
       - yfinance

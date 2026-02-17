@@ -54,9 +54,9 @@ def get_price_history(
     - Volume: the total volume traded of the stock on the given day
     """
 
-    assert (
-        len(tickers) > 1
-    ), "Please provide more than one ticker to fetch data for, else use get_single_ticker_price_history"
+    assert len(tickers) > 1, (
+        "Please provide more than one ticker to fetch data for, else use get_single_ticker_price_history"
+    )
 
     tickers_str = " ".join(tickers) if len(tickers) > 1 else tickers[0]
     print(tickers_str)

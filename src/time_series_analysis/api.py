@@ -58,9 +58,9 @@ class TimeSeriesApi:
         if col_names is not None:
             log_return_cols = col_names
 
-        assert (
-            len(log_return_cols) > 0
-        ), "No log return columns found in the DataFrame, add log returns first"
+        assert len(log_return_cols) > 0, (
+            "No log return columns found in the DataFrame, add log returns first"
+        )
 
         def _cumulative_returns(df):
             df = df.set_index("Date").sort_index()

@@ -1,0 +1,17 @@
+name: time_series_analysis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - polars
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - requests
+  - pydantic
+  - pip
+  - pip:
+      - yfinance
